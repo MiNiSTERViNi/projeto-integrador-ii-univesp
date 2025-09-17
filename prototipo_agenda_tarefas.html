@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Protótipo - Gestão Dinâmica de Agenda de Tarefas - </title>
+  <style>
+    :root{
+      --bg:#0f172a;        /* slate-900 */
+      --panel:#111827;     /* gray-900 */
+      --muted:#1f2937;     /* gray-800 */
+      --text:#e5e7eb;      /* gray-200 */
+      --sub:#9ca3af;       /* gray-400 */
+      --accent:#22c55e;    /* green-500 */
+      --accent-2:#60a5fa;  /* blue-400 */
+      --danger:#ef4444;    /* red-500 */
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 600px at 10% -20%, #1f2937 0%, #0b1226 40%, #0a0f1f 100%), var(--bg);
+      color:var(--text);
+    }
+    header{
+      position:sticky;top:0;z-index:10;
+      background:rgba(17,24,39,.8);
+      backdrop-filter:saturate(1.1) blur(8px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+    .brand .logo{
+      width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:grid;place-items:center;color:white;font-weight:900;box-shadow:var(--shadow);
+    }
+    nav{display:flex;gap:8px;flex-wrap:wrap}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{
+      padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.08);
+      background:#0b1221; color:#d1d5db; cursor:pointer; transition:.2s;
+    }
+    .tab.active{background:linear-gradient(135deg,#182235,#0e1628);color:#fff;border-color:rgba(255,255,255,.18)}
+    .grid{display:grid;grid-template-columns:320px 1fr;gap:18px;margin-top:18px}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .muted{color:var(--sub);font-size:14px}
+    .input, select, textarea{
+      width:100%;padding:12px 14px;border-radius:12px;background:#0a1223;color:#e5e7eb;border:1px solid rgba(255,255,255,.08);
+      outline:none;transition:.2s;
+    }
+    .input:focus, textarea:focus, select:focus{border-color:var(--accent)}
+    .btn{
+      border:none;border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:700;
+      background:linear-gradient(135deg,var(--accent),#16a34a); color:white; box-shadow:var(--shadow);
+    }
+    .btn.secondary{background:linear-gradient(135deg,#334155,#1f2937)}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.14);color:#d1d5db}
+    .btn.danger{background:linear-gradient(135deg,#ef4444,#b91c1c)}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .kpis .kpi{padding:14px;border-radius:14px;background:linear-gradient(135deg,#0d162b,#0a1223);border:1px solid rgba(255,255,255,.06)}
+    .tag{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);color:#cbd5e1}
+    .list{display:grid;gap:10px;margin-top:10px}
+    .item{
+      display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;
+      padding:12px;border-radius:12px;background:linear-gradient(135deg,#0d162b,#0a1223);border:1px solid rgba(255,255,255,.06);
+    }
+    .circle{width:18px;height:18px;border-radius:999px;border:2px solid #4ade80;display:inline-block}
+    .status{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);text-transform:capitalize}
+    .status.aberta{border-color:#f59e0b;color:#fbbf24}
+    .status.em_andamento{border-color:#60a5fa;color:#93c5fd}
+    .status.concluida{border-color:#22c55e;color:#86efac}
+    .hidden{display:none}
+    footer{margin:40px 0;color:#94a3b8;text-align:center;font-size:13px}
+    .pill{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12)}
+    .subtitle{margin:0 0 8px 0;color:#cbd5e1}
+    .section-title{margin:0 0 6px 0}
+    .hint{font-size:12px;color:#a1a1aa}
+    .inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <div class="brand">
+        <div class="logo">GT</div>
+        <div>Gestão Dinâmica de Tarefas - PROJETO INTEGRADOR II - GRUPO 04 - UNIVESP - 2025</div>
+      </div>
+      <nav class="tabs" id="tabs">
+        <button class="tab active" data-screen="login">Login</button>
+        <button class="tab" data-screen="dashboard">Dashboard</button>
+        <button class="tab" data-screen="nova">Nova Tarefa</button>
+        <button class="tab" data-screen="detalhe">Detalhe</button>
+        <button class="tab" data-screen="clientes">Clientes</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- LOGIN -->
+    <section id="screen-login" class="screen">
+      <div class="grid">
+        <div class="card">
+          <h2 class="section-title">Entrar</h2>
+          <p class="muted">Autenticação por e‑mail (sem senha), simulando Supabase Auth.</p>
+          <div style="display:grid;gap:10px;margin-top:10px">
+            <input class="input" placeholder="Seu e‑mail" />
+            <button class="btn" onclick="switchTo('dashboard')">Enviar link mágico</button>
+            <p class="hint">*No MVP final, este botão enviará um link de login por e‑mail usando supabase.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="subtitle">Como funciona</h3>
+          <ul class="muted">
+            <li>Usuário informa o e‑mail</li>
+            <li>Recebe link para autenticação</li>
+            <li>Após login, é redirecionado ao Dashboard</li>
+          </ul>
+          <div class="inline" style="margin-top:8px">
+            <span class="pill">API externa: Supabase Auth</span>
+            <span class="pill">Armazenamento: Postgres</span>
+            <span class="pill">Deploy: Vercel</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="screen-dashboard" class="screen hidden">
+      <div class="toolbar">
+        <h2 class="section-title">Minhas Tarefas</h2>
+        <div class="inline">
+          <select class="input" style="width:auto">
+            <option>Todos status</option>
+            <option>Aberta</option>
+            <option>Em andamento</option>
+            <option>Concluída</option>
+          </select>
+          <input class="input" style="width:220px" placeholder="Buscar..."/>
+          <button class="btn" onclick="switchTo('nova')">+ Nova Tarefa</button>
+        </div>
+      </div>
+      <div class="kpis">
+        <div class="kpi">
+          <div class="muted">Abertas</div>
+          <div style="font-size:24px;font-weight:800">5</div>
+        </div>
+        <div class="kpi">
+          <div class="muted">Em andamento</div>
+          <div style="font-size:24px;font-weight:800">3</div>
+        </div>
+        <div class="kpi">
+          <div class="muted">Concluídas</div>
+          <div style="font-size:24px;font-weight:800">12</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="inline" style="justify-content:space-between">
+          <div class="muted">Lista de tarefas (exemplo)</div>
+          <div class="muted">Ordenar por: <strong>Prazo</strong></div>
+        </div>
+        <div class="list" id="taskList"></div>
+      </div>
+    </section>
+
+    <!-- NOVA TAREFA -->
+    <section id="screen-nova" class="screen hidden">
+      <div class="grid">
+        <div class="card">
+          <h2 class="section-title">Nova Tarefa</h2>
+          <div style="display:grid;gap:10px">
+            <input id="tTitle" class="input" placeholder="Título da tarefa *"/>
+            <textarea id="tDesc" class="input" rows="4" placeholder="Descrição"></textarea>
+            <div class="inline">
+              <label class="muted">Status</label>
+              <select id="tStatus">
+                <option value="aberta">Aberta</option>
+                <option value="em_andamento">Em andamento</option>
+                <option value="concluida">Concluída</option>
+              </select>
+              <label class="muted">Prioridade</label>
+              <select id="tPrio">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+              <label class="muted">Prazo</label>
+              <input id="tDue" class="input" type="date"/>
+            </div>
+            <div class="inline">
+              <button class="btn" onclick="saveTask()">Salvar</button>
+              <button class="btn ghost" onclick="switchTo('dashboard')">Cancelar</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="subtitle">Regras de negócio (MVP)</h3>
+          <ul class="muted">
+            <li><strong>Título</strong> é obrigatório</li>
+            <li><strong>Prioridade</strong> vai de 1 (baixa) a 5 (alta)</li>
+            <li><strong>Prazo</strong> opcional; atrasadas aparecem em destaque</li>
+            <li>Usuário só vê/edita as <strong>próprias</strong> tarefas</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- DETALHES DA TAREFA -->
+    <section id="screen-detalhe" class="screen hidden">
+      <div class="grid">
+        <div class="card">
+          <h2 class="section-title">Detalhe da Tarefa</h2>
+          <div id="detailBody" class="muted">Escolha uma tarefa no Dashboard para ver os detalhes.</div>
+        </div>
+        <div class="card">
+          <h3 class="subtitle">Ações</h3>
+          <div class="inline" style="gap:6px">
+            <button class="btn secondary" onclick="alert('Editar (protótipo)')">Editar</button>
+            <button class="btn danger" onclick="alert('Excluir (protótipo)')">Excluir</button>
+            <button class="btn ghost" onclick="switchTo('dashboard')">Voltar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CADASTRO DE CLIENTES (opcional para ordens de serviço) -->
+    <section id="screen-clientes" class="screen hidden">
+      <div class="card">
+        <h2 class="section-title">Clientes (opcional)</h2>
+        <p class="muted">Cadastro simples de clientes para vincular tarefas/ordens de serviço.</p>
+        <div class="inline" style="margin-top:8px">
+          <input class="input" style="width:280px" placeholder="Nome do cliente"/>
+          <input class="input" style="width:240px" placeholder="Telefone/WhatsApp"/>
+          <button class="btn">Adicionar</button>
+        </div>
+        <div class="list" style="margin-top:12px">
+          <div class="item">
+            <div class="circle"></div>
+            <div>
+              <div><strong>Leandro Silva</strong> <span class="muted">• Manutenção de PCs e celulares</span></div>
+              <div class="muted">Contato: (16) 9 9999-9999</div>
+            </div>
+            <div class="status em_andamento">ativo</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Protótipo estático para o Relatório Parcial - Clique nas abas acima para navegar.
+  </footer>
+
+  <script>
+    const screens = ["login","dashboard","nova","detalhe","clientes"];
+    function switchTo(name){
+      screens.forEach(s=>{
+        document.getElementById("screen-"+s).classList.add("hidden");
+        document.querySelector(`[data-screen="${s}"]`).classList.remove("active");
+      });
+      document.getElementById("screen-"+name).classList.remove("hidden");
+      document.querySelector(`[data-screen="${name}"]`).classList.add("active");
+    }
+
+    // Sample tasks
+    const tasks = [
+      {id:"1", title:"Troca de tela - Moto G", desc:"Cliente: Vinicius • Orçamento enviado", status:"em_andamento", due:"2025-09-20", prio:4},
+      {id:"2", title:"Backup de dados • desktop", desc:"Agendar visita técnica", status:"aberta", due:"2025-09-18", prio:3},
+      {id:"3", title:"Formatação + SSD", desc:"Instalar Windows + Office", status:"aberta", due:"2025-09-17", prio:5},
+      {id:"4", title:"Troca de bateria iPhone 11", desc:"Pedir peça ao fornecedor", status:"em_andamento", due:"2025-09-22", prio:2},
+      {id:"5", title:"Entrega notebook", desc:"Concluído e testado", status:"concluida", due:"2025-09-12", prio:1},
+    ];
+
+    function renderList(){
+      const list = document.getElementById("taskList");
+      list.innerHTML = "";
+      tasks.forEach(t=>{
+        const el = document.createElement("div");
+        el.className = "item";
+        el.innerHTML = `
+          <div class="circle"></div>
+          <div>
+            <div><strong>${t.title}</strong> <span class="muted">• prazo ${t.due} • prioridade ${t.prio}</span></div>
+            <div class="muted">${t.desc}</div>
+          </div>
+          <div class="status ${t.status}">${t.status.replace('_',' ')}</div>
+        `;
+        el.onclick = () => {
+          switchTo('detalhe');
+          document.getElementById('detailBody').innerHTML = `
+            <div class="muted">ID: <strong>${t.id}</strong></div>
+            <h3 class="subtitle" style="margin-top:8px">${t.title}</h3>
+            <p>${t.desc}</p>
+            <div class="inline"><span class="tag">Status: ${t.status}</span><span class="tag">Prazo: ${t.due}</span><span class="tag">Prioridade: ${t.prio}</span></div>
+          `;
+        };
+        list.appendChild(el);
+      });
+    }
+    function saveTask(){
+      const title = document.getElementById("tTitle").value.trim();
+      if(!title){ alert("Título é obrigatório."); return; }
+      const desc = document.getElementById("tDesc").value.trim();
+      const status = document.getElementById("tStatus").value;
+      const prio = parseInt(document.getElementById("tPrio").value,10);
+      const due  = document.getElementById("tDue").value || "—";
+      const id = (tasks.length+1).toString();
+      tasks.unshift({id,title: title, desc, status, prio, due});
+      switchTo('dashboard'); renderList();
+      alert("Tarefa salva (protótipo). No MVP final, isso grava no banco via API.");
+    }
+
+    renderList();
+  </script>
+</body>
+</html>
